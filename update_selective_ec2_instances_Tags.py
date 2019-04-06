@@ -29,44 +29,45 @@ response = ec2.describe_instances()
 # 	account = [production,dev,qa]
 
 
-# Uncomment below line if you want to use your own Tag Key values file
 # Only works with a single line of instances IDs
 # TODO : allow to add instances' IDs on multiple comma separated lines
-instance_IDs_Data_file = "instance-ids.file.txt.sample" # Included with Git
-#instance_IDs_Data_file = "instance-ids.file.txt"		# Your own file not in Git
 
-# Tag_Data_file = "tags.file.txt"				# Your own file not in Git
-Tag_Data_file = "tags.file.txt.sample"	# Included with Git
+# instance_IDs_Data_file = "instance-ids.file.txt.sample" # Sample file included with Git
+instance_IDs_Data_file = "instance-ids.file.txt"		# Your own file not in Git
 
-# TODO : Check if Tag_Data_file exist
-# Check if Both Data File exist before proceed further 
+# Tag_Data_file = "tags.file.txt.sample"	# Sample file included with Git
+Tag_Data_file = "tags.file.txt"				# Your own file not in Git
+
+
+# Check if Both Data Files exist before proceed further 
 
 if not(os.path.isfile(instance_IDs_Data_file)):
-	print ("\"{}\" >>>> Doesn't exist".format(instance_IDs_Data_file))
-	print ("Create this file and add ec2 instances ID separated by comma on a single line ")
+	print ("\nData File Error ..... ")
+	print ("\n\"{}\" >>>> Doesn't exist".format(instance_IDs_Data_file))
+	print ("\nCreate this file and add ec2 instance IDs separated by comma on a single line ")
+	print ("\n")
 	sys.exit()
 
 if not(os.path.isfile(Tag_Data_file)):
+	print ("\nDate File Error ..... ")
 	print ("\n\"{}\" >>>> Doesn't exist".format(Tag_Data_file))
 	print ("Create this file and add Tag information")
 	print ("\nFor example:")
 	print ("\taccount = production,dev,qa")
 	print ("\tstate = permanent,temporary")
+	print ("\n")
 	sys.exit()
 
 Tag_Keys_Values = {}
 # Call the function to extract Tags Key pair value from the tags.file.txt file
 Tag_Keys_Values = extractTagKeysValues(Tag_Data_file)
-#print (Tag_Keys_Values)
 
 # Convert instances-id.file into a list
 Instance_IDs_List = []
 Instance_IDs_List = extractInstanceIDs(instance_IDs_Data_file)
-#print (Instance_IDs_List)
 
 instanceTagDict = {}
 for reservation in (response["Reservations"]):
-	#pprint (reservation)
 	for instance in reservation["Instances"]:
 		# Clear the instanceTagDict before using it otherwise it will show wrong / stale values 
 		instanceTagDict.clear()
@@ -79,6 +80,7 @@ for reservation in (response["Reservations"]):
 				for i in range(0,len(instance["Tags"])):
 					instanceTagDict[instance["Tags"][i]['Key']] = instance["Tags"][i]['Value']
 				# Display all current Tags
+				print("\n------- instance ID {}".format(instance["InstanceId"]))
 				pprint (instanceTagDict)
 				resp = input ("\nDo you want to add Tags for this instance {}  ( y or yes ): ".format(instance["InstanceId"]))
 				if resp.lower() == 'y' or resp.lower() == "yes":
