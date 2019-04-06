@@ -1,6 +1,6 @@
-# This program will read list of ec2 instances IDs from the file and add or update tags if needed
+# This program will read list of ec2 instances' IDs from the file and will add or update tags if needed
 
-import boto3,sys
+import boto3,sys,os
 from pprint import pprint 
 from extractTagKeysValues import extractTagKeysValues
 from extractInstanceIDs import extractInstanceIDs
@@ -8,7 +8,7 @@ from extractInstanceIDs import extractInstanceIDs
 ec2 = boto3.client('ec2')
 response = ec2.describe_instances()
 
-# Data File : instance ID file
+# Data File : instance IDs file
 # Contains : instances' IDs separated by commas
 # Requirement : instances IDs must be on a single line
 
@@ -32,13 +32,27 @@ response = ec2.describe_instances()
 # Uncomment below line if you want to use your own Tag Key values file
 # Only works with a single line of instances IDs
 # TODO : allow to add instances' IDs on multiple comma separated lines
-instance_IDs_Data_file = "instance-ids.file.txt.sample"
-#instance_IDs_Data_file = "instance-ids.file.txt"
+instance_IDs_Data_file = "instance-ids.file.txt.sample" # Included with Git
+#instance_IDs_Data_file = "instance-ids.file.txt"		# Your own file not in Git
 
-Tag_Data_file = "tags.file.txt"				# Your own file not in Git
-# Tag_Data_file = "tags.file.txt.sample"	# Included with Git
+# Tag_Data_file = "tags.file.txt"				# Your own file not in Git
+Tag_Data_file = "tags.file.txt.sample"	# Included with Git
 
 # TODO : Check if Tag_Data_file exist
+# Check if Both Data File exist before proceed further 
+
+if not(os.path.isfile(instance_IDs_Data_file)):
+	print ("\"{}\" >>>> Doesn't exist".format(instance_IDs_Data_file))
+	print ("Create this file and add ec2 instances ID separated by comma on a single line ")
+	sys.exit()
+
+if not(os.path.isfile(Tag_Data_file)):
+	print ("\n\"{}\" >>>> Doesn't exist".format(Tag_Data_file))
+	print ("Create this file and add Tag information")
+	print ("\nFor example:")
+	print ("\taccount = production,dev,qa")
+	print ("\tstate = permanent,temporary")
+	sys.exit()
 
 Tag_Keys_Values = {}
 # Call the function to extract Tags Key pair value from the tags.file.txt file
@@ -48,7 +62,7 @@ Tag_Keys_Values = extractTagKeysValues(Tag_Data_file)
 # Convert instances-id.file into a list
 Instance_IDs_List = []
 Instance_IDs_List = extractInstanceIDs(instance_IDs_Data_file)
-print (Instance_IDs_List)
+#print (Instance_IDs_List)
 
 instanceTagDict = {}
 for reservation in (response["Reservations"]):
@@ -59,8 +73,6 @@ for reservation in (response["Reservations"]):
 
 		# Verify if the instance ID is in the list, if yes then allow to update tags otherwise skip
 		for i in range(0,len(Instance_IDs_List)):
-			#print ("{}".format(Instance_IDs_List[i]))
-			#print ("{}".format(instance["InstanceId"]))
 			if instance["InstanceId"] == Instance_IDs_List[i]:
 				# If instance ID matches
 				# List current Tags of the instance
@@ -82,12 +94,6 @@ for reservation in (response["Reservations"]):
 					# Clear the instanceTagDict before using it otherwise it will show wrong / old values 
 					instanceTagDict.clear()
 					continue
-
 				input("Press Any Key to Continue ... \n")
-
-
 			else:
 				continue
-
-
-
